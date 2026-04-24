@@ -1,0 +1,640 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Share+Tech+Mono&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  #game{width:100%;min-height:600px;background:#1a0a00;color:#c8a96e;font-family:'Share Tech Mono',monospace;position:relative;overflow:hidden;user-select:none}
+  #office{position:relative;width:100%;height:600px;background:linear-gradient(180deg,#0d0500 0%,#1a0a00 40%,#251200 100%);display:flex;align-items:center;justify-content:center}
+  .desk{position:absolute;bottom:0;left:0;right:0;height:180px;background:linear-gradient(180deg,#3d1f00 0%,#2a1400 100%);border-top:3px solid #5c3000}
+  .fan{position:absolute;top:60px;left:50%;transform:translateX(-50%);width:60px;height:60px;border:3px solid #4a2800;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;animation:spin 0.5s linear infinite}
+  @keyframes spin{to{transform:translateX(-50%) rotate(360deg)}}
+  .monitor-screen{position:absolute;top:80px;left:50%;transform:translateX(-50%);width:320px;height:220px;background:#0a1a0a;border:4px solid #3a3a3a;border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .monitor-screen.off{background:#050a05}
+  .monitor-content{width:100%;height:100%;position:relative;overflow:hidden}
+  .cam-label{position:absolute;top:4px;left:6px;font-size:10px;color:#4cff4c;font-family:'Share Tech Mono',monospace}
+  .cam-image{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:48px;flex-direction:column;gap:8px}
+  .cam-static{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,0,0.03) 2px,rgba(0,255,0,0.03) 4px)}
+  .hud{position:absolute;top:0;left:0;right:0;padding:10px 16px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;z-index:10}
+  .time-display{font-family:'Creepster',cursive;font-size:28px;color:#ff8c00;text-shadow:0 0 10px #ff4400}
+  .night-display{font-size:12px;color:#a06030;margin-top:2px}
+  .energy-bar-wrap{text-align:right}
+  .energy-label{font-size:11px;color:#a06030;margin-bottom:4px}
+  .energy-bar{width:140px;height:14px;background:#1a0800;border:1px solid #5c3000;border-radius:2px;overflow:hidden}
+  .energy-fill{height:100%;background:linear-gradient(90deg,#ff2200,#ff8800,#ffcc00);transition:width 0.5s;border-radius:2px}
+  .energy-pct{font-size:13px;color:#ffaa00;font-weight:bold}
+  .door-btn{position:absolute;bottom:140px;width:52px;height:120px;background:#2a1400;border:2px solid #5c3000;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;font-size:11px;color:#c8a96e;letter-spacing:2px;transition:all 0.2s;z-index:5}
+  .door-btn:hover{background:#3d1f00;border-color:#8c5020}
+  .door-btn.closed{background:#0a0500;border-color:#ff4400;color:#ff6622}
+  #door-l{left:12px}
+  #door-r{right:12px}
+  .light-btn{position:absolute;bottom:260px;width:40px;height:40px;background:#1a0a00;border:1px solid #5c3000;border-radius:50%;cursor:pointer;font-size:18px;z-index:5;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+  .light-btn:hover{background:#3d1f00}
+  .light-btn.on{background:#332200;box-shadow:0 0 12px #ffcc00}
+  #light-l{left:60px}
+  #light-r{right:60px}
+  .cam-panel{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:380px;height:0;background:#0a0500;border:2px solid #3a1a00;border-bottom:none;border-radius:4px 4px 0 0;overflow:hidden;transition:height 0.3s;z-index:20}
+  .cam-panel.open{height:280px}
+  .cam-tabs{display:flex;flex-wrap:wrap;gap:4px;padding:8px;background:#0f0700}
+  .cam-tab{padding:3px 8px;font-size:10px;background:#1a0a00;border:1px solid #3a1a00;border-radius:2px;cursor:pointer;color:#7a5030;transition:all 0.2s;font-family:'Share Tech Mono',monospace}
+  .cam-tab:hover{background:#251200;color:#c8a96e}
+  .cam-tab.active{background:#3d1f00;border-color:#8c5020;color:#ffcc88}
+  .cam-view{padding:8px;flex:1}
+  .cam-monitor{width:100%;height:160px;background:#050a05;border:2px solid #1a3a1a;border-radius:2px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+  .cam-open-btn{position:absolute;bottom:185px;left:50%;transform:translateX(-50%);background:#1a0a00;border:1px solid #5c3000;color:#c8a96e;font-family:'Share Tech Mono',monospace;font-size:11px;padding:6px 20px;cursor:pointer;border-radius:2px;z-index:10;transition:all 0.2s;white-space:nowrap}
+  .cam-open-btn:hover{background:#3d1f00}
+  .animatronic{font-size:40px;animation:breathe 2s ease-in-out infinite}
+  @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+  .animatronic.alert{animation:shake 0.3s ease-in-out infinite}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+  #jumpscare{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:100;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px}
+  #jumpscare.show{display:flex}
+  .js-emoji{font-size:120px;animation:jumpin 0.1s ease-out}
+  @keyframes jumpin{from{transform:scale(0.1)}to{transform:scale(1)}}
+  .js-text{font-family:'Creepster',cursive;font-size:36px;color:#ff2200;text-align:center;line-height:1.2}
+  #win-screen,#lose-screen,#start-screen,#settings-screen{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:50;background:#0a0500}
+  .screen-title{font-family:'Creepster',cursive;font-size:52px;color:#ff6600;text-shadow:0 0 20px #ff2200;text-align:center;line-height:1.1}
+  .screen-sub{font-size:13px;color:#8c5020;text-align:center;max-width:320px;line-height:1.6}
+  .btn-main{padding:10px 32px;background:#1a0a00;border:2px solid #8c5020;color:#c8a96e;font-family:'Share Tech Mono',monospace;font-size:14px;cursor:pointer;border-radius:2px;transition:all 0.2s;margin-top:8px}
+  .btn-main:hover{background:#3d1f00;border-color:#ff6600;color:#ffcc88}
+  .night-select{display:flex;gap:8px;margin-top:8px}
+  .night-btn{padding:8px 14px;background:#1a0a00;border:1px solid #5c3000;color:#7a5030;font-family:'Share Tech Mono',monospace;font-size:12px;cursor:pointer;border-radius:2px;transition:all 0.2s}
+  .night-btn.sel{background:#3d1f00;border-color:#ff8800;color:#ffcc88}
+  .night-btn:hover{background:#251200;color:#c8a96e}
+  .threat-indicators{position:absolute;left:0;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px;padding:8px;z-index:10}
+  .threat-dot{width:10px;height:10px;border-radius:50%;border:1px solid #3a1a00;background:#0a0500;transition:background 0.3s}
+  .threat-dot.active{background:#ff2200;box-shadow:0 0 6px #ff2200}
+  .threat-dot.warn{background:#ff8800;box-shadow:0 0 6px #ff8800}
+  .pip{font-size:9px;color:#5a3010;padding:2px 0;text-align:center}
+  .door-visual{position:absolute;top:0;height:100%;width:8px;background:transparent;transition:background 0.3s}
+  #door-vis-l{left:110px}
+  #door-vis-r{right:110px}
+  .door-visual.closed{background:linear-gradient(180deg,#3a1a00,#1a0800,#3a1a00)}
+  .light-effect{position:absolute;top:0;height:100%;width:100px;opacity:0;transition:opacity 0.2s;pointer-events:none}
+  #light-eff-l{left:0;background:linear-gradient(90deg,rgba(255,200,50,0.15),transparent)}
+  #light-eff-r{right:0;background:linear-gradient(270deg,rgba(255,200,50,0.15),transparent)}
+  .stat-row{display:flex;gap:12px;margin-top:4px}
+  .stat{font-size:10px;color:#5a3010}
+  .stat span{color:#a06030}
+  .log{position:absolute;bottom:300px;left:50%;transform:translateX(-50%);font-size:10px;color:#4caa4c;background:rgba(0,20,0,0.7);padding:4px 10px;border-radius:2px;opacity:0;transition:opacity 0.3s;white-space:nowrap;z-index:15}
+  .log.show{opacity:1}
+  #phone-call{position:absolute;top:80px;right:16px;max-width:220px;background:#0f0700;border:1px solid #3a1a00;border-radius:4px;padding:10px;font-size:10px;color:#7a5030;line-height:1.6;display:none;z-index:30}
+  #phone-call.show{display:block}
+  .phone-title{color:#ff8800;font-size:11px;margin-bottom:6px}
+  .golden-freddy{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:80px;opacity:0;pointer-events:none;z-index:40;transition:opacity 0.5s;filter:sepia(1) brightness(0.7)}
+  .golden-freddy.show{opacity:1}
+  .settings-row{display:flex;gap:12px;align-items:center;margin:4px 0}
+  .settings-label{font-size:12px;color:#8c5020;width:100px}
+  .ai-level{display:flex;gap:4px}
+  .ai-dot{width:16px;height:16px;border-radius:2px;border:1px solid #3a1a00;background:#0a0500;cursor:pointer;transition:background 0.2s}
+  .ai-dot.on{background:#ff6600}
+  .ai-dot:hover{border-color:#8c5020}
+  .progress-night{display:flex;gap:4px;margin-top:8px}
+  .prog-pip{width:24px;height:8px;border-radius:2px;background:#1a0800;border:1px solid #3a1a00}
+  .prog-pip.done{background:#ff6600}
+  .prog-pip.current{background:#ffcc00;animation:pulse2 1s ease-in-out infinite}
+  @keyframes pulse2{0%,100%{opacity:1}50%{opacity:0.4}}
+  .credits{font-size:9px;color:#3a1a00;text-align:center;margin-top:20px}
+</style>
+
+<div id="game">
+  <div id="start-screen">
+    <div class="screen-title">FIVE NIGHTS AT<br>FREDDY'S</div>
+    <div class="screen-sub">Freddy Fazbear's Pizza — Turno de seguridad nocturno<br>Mantente atento. Cuida la energía. Sobrevive hasta las 6 AM.</div>
+    <div style="font-size:11px;color:#5a3010;margin-top:8px">Selecciona noche:</div>
+    <div class="night-select" id="night-select">
+      <div class="night-btn sel" data-n="1">N1</div>
+      <div class="night-btn" data-n="2">N2</div>
+      <div class="night-btn" data-n="3">N3</div>
+      <div class="night-btn" data-n="4">N4</div>
+      <div class="night-btn" data-n="5">N5</div>
+      <div class="night-btn" data-n="6" style="color:#ff6600;border-color:#ff4400">N6★</div>
+    </div>
+    <button class="btn-main" id="start-btn">COMENZAR TURNO</button>
+    <div class="credits">Recreación por Claude · Basado en FNAF de Scott Cawthon</div>
+  </div>
+
+  <div id="win-screen" style="display:none">
+    <div class="screen-title" style="color:#ffcc00">¡SOBREVIVISTE!</div>
+    <div class="screen-sub" id="win-msg"></div>
+    <div class="progress-night" id="progress-nights"></div>
+    <button class="btn-main" id="next-btn">SIGUIENTE NOCHE</button>
+    <button class="btn-main" id="restart-btn2" style="margin-top:0;font-size:11px;border-color:#3a1a00;color:#5a3010">MENÚ PRINCIPAL</button>
+  </div>
+
+  <div id="lose-screen" style="display:none">
+    <div class="screen-title" style="color:#ff2200">IT'S ME</div>
+    <div class="screen-sub" id="lose-msg"></div>
+    <button class="btn-main" id="retry-btn">REINTENTAR</button>
+    <button class="btn-main" id="menu-btn" style="margin-top:0;font-size:11px;border-color:#3a1a00;color:#5a3010">MENÚ PRINCIPAL</button>
+  </div>
+
+  <div id="office" style="display:none">
+    <div class="hud">
+      <div>
+        <div class="time-display" id="time-display">12 AM</div>
+        <div class="night-display" id="night-display">NOCHE 1</div>
+        <div class="stat-row">
+          <div class="stat">FREDDY: <span id="freddy-ai">0</span></div>
+          <div class="stat">BONNIE: <span id="bonnie-ai">0</span></div>
+          <div class="stat">CHICA: <span id="chica-ai">0</span></div>
+          <div class="stat">FOXY: <span id="foxy-ai">0</span></div>
+        </div>
+      </div>
+      <div class="energy-bar-wrap">
+        <div class="energy-label">ENERGÍA RESTANTE</div>
+        <div class="energy-bar"><div class="energy-fill" id="energy-fill" style="width:100%"></div></div>
+        <div class="energy-pct" id="energy-pct">100%</div>
+      </div>
+    </div>
+
+    <div class="door-visual" id="door-vis-l"></div>
+    <div class="door-visual" id="door-vis-r"></div>
+    <div class="light-effect" id="light-eff-l"></div>
+    <div class="light-effect" id="light-eff-r"></div>
+
+    <div class="threat-indicators">
+      <div class="pip">AMENAZA</div>
+      <div class="threat-dot" id="td-bonnie" title="Bonnie"></div>
+      <div class="threat-dot" id="td-chica" title="Chica"></div>
+      <div class="threat-dot" id="td-foxy" title="Foxy"></div>
+      <div class="threat-dot" id="td-freddy" title="Freddy"></div>
+    </div>
+
+    <div class="monitor-screen" id="monitor" onclick="toggleCams()">
+      <div class="monitor-content" id="monitor-content">
+        <div style="font-size:11px;color:#3a5a3a;text-align:center">HAGA CLIC PARA<br>VER CÁMARAS</div>
+      </div>
+    </div>
+    <div class="fan">🌀</div>
+
+    <div class="desk"></div>
+
+    <button class="door-btn" id="door-l" onclick="toggleDoor('l')">PUERTA</button>
+    <button class="door-btn" id="door-r" onclick="toggleDoor('r')">PUERTA</button>
+    <button class="light-btn" id="light-l" onmousedown="lightOn('l')" onmouseup="lightOff('l')" ontouchstart="lightOn('l')" ontouchend="lightOff('l')">💡</button>
+    <button class="light-btn" id="light-r" onmousedown="lightOn('r')" onmouseup="lightOff('r')" ontouchstart="lightOn('r')" ontouchend="lightOff('r')">💡</button>
+
+    <button class="cam-open-btn" id="cam-open-btn" onclick="toggleCams()">▲ CÁMARAS [TABLET]</button>
+
+    <div class="cam-panel" id="cam-panel">
+      <div style="display:flex;flex-direction:column;height:100%">
+        <div class="cam-tabs" id="cam-tabs"></div>
+        <div class="cam-view">
+          <div class="cam-monitor" id="cam-monitor"></div>
+        </div>
+        <div style="display:flex;justify-content:center;padding:4px">
+          <button class="cam-open-btn" style="position:relative;bottom:auto;transform:none" onclick="toggleCams()">▼ CERRAR</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="golden-freddy" id="golden-freddy">🐻</div>
+    <div class="log" id="log"></div>
+    <div id="phone-call">
+      <div class="phone-title">📞 LLAMADA TELEFÓNICA</div>
+      <div id="phone-text"></div>
+    </div>
+  </div>
+
+  <div id="jumpscare">
+    <div class="js-emoji" id="js-emoji"></div>
+    <div class="js-text" id="js-text"></div>
+  </div>
+</div>
+
+<script>
+const CAMERAS = [
+  {id:'1A',name:'Escenario Principal',emoji:'🎭',desc:'Freddy, Bonnie y Chica en el escenario'},
+  {id:'1B',name:'Sala de Fiestas',emoji:'🎉',desc:'Decoraciones y mesas vacías'},
+  {id:'1C',name:'Pasillo Trasero',emoji:'🚪',desc:'Pasillo que lleva al escenario'},
+  {id:'2A',name:'Cocina',emoji:'🍕',desc:'Sin cámara — solo audio'},
+  {id:'2B',name:'Bahía de Piratería',emoji:'🏴‍☠️',desc:'El hábitat de Foxy'},
+  {id:'3',name:'Cuarto del Este',emoji:'🪆',desc:'Sala de almacenamiento de piezas'},
+  {id:'4A',name:'Pasillo Izq.',emoji:'🌑',desc:'Pasillo izquierdo al guardia'},
+  {id:'4B',name:'Pasillo Der.',emoji:'🌑',desc:'Pasillo derecho al guardia'},
+  {id:'5',name:'Backstage',emoji:'🔧',desc:'Almacén de repuestos'},
+  {id:'6',name:'Cuarto Oeste',emoji:'📦',desc:'Almacén secundario'},
+  {id:'7',name:'Sala Extra',emoji:'🖼️',desc:'Cuarto adicional — revisar posters'},
+];
+
+const AI_MOVES = {
+  freddy: ['1A','1A','1A','1C','1C','4B','office'],
+  bonnie: ['1A','1A','4A','1C','5','4A','office'],
+  chica:  ['1A','1B','1C','4B','1B','4B','office'],
+  foxy:   ['2B','2B','2B','2B','4A','4A','office'],
+};
+
+const NIGHT_AI = [
+  {freddy:0,bonnie:0,chica:0,foxy:0},
+  {freddy:0,bonnie:3,chica:3,foxy:1},
+  {freddy:1,bonnie:4,chica:4,foxy:2},
+  {freddy:2,bonnie:5,chica:6,foxy:3},
+  {freddy:3,bonnie:7,chica:8,foxy:5},
+  {freddy:4,bonnie:9,chica:9,foxy:6},
+  {freddy:10,bonnie:10,chica:10,foxy:10},
+];
+
+const PHONE_MSGS = [
+  "Uh, hola, hola. Soy el guardia anterior. Quería dejarte algunos consejos...",
+  "El traje animatrónico tiene un exoesqueleto dentro. Si te ven sin uniforme, te meterán en uno.",
+  "Tienes baterías limitadas esta noche. Cuida la energía.",
+  "Freddy tiende a moverse solo cuando las luces están apagadas.",
+  "Foxy corre por el pasillo izquierdo. ¡Cierra esa puerta!",
+  "Si ves a alguien en el escenario... que no esté en el escenario... buena suerte.",
+];
+
+let G = {
+  running:false,night:1,hour:0,energy:100,camOpen:false,
+  activeCam:'1A',tick:0,doorL:false,doorR:false,lightL:false,lightR:false,
+  pos:{freddy:0,bonnie:0,chica:0,foxy:0},
+  aiLevels:{freddy:0,bonnie:3,chica:3,foxy:1},
+  foxyRuns:0,foxyTimer:0,
+  goldenShown:false,camViewCount:0,
+  phoneShown:false,phoneIdx:0,phoneTimer:0,
+  interval:null,secondTick:0,
+  easterEggs:{goldenFreddy:false,rarePoster:false,halloweenMode:false},
+  nightsCleared:[],
+  jumpscareActive:false,
+};
+
+const EMOJIS = {freddy:'🐻',bonnie:'🐰',chica:'🐥',foxy:'🦊',golden:'👻'};
+const NAMES  = {freddy:'Freddy',bonnie:'Bonnie',chica:'Chica',foxy:'Foxy',golden:'Golden Freddy'};
+
+function showLog(msg,ms=2000){
+  let el=document.getElementById('log');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),ms);
+}
+
+function formatHour(h){
+  const labels=['12 AM','1 AM','2 AM','3 AM','4 AM','5 AM','6 AM'];
+  return labels[Math.min(h,6)];
+}
+
+function updateHUD(){
+  document.getElementById('time-display').textContent=formatHour(G.hour);
+  document.getElementById('night-display').textContent='NOCHE '+G.night;
+  let pct=Math.max(0,Math.round(G.energy));
+  document.getElementById('energy-fill').style.width=pct+'%';
+  document.getElementById('energy-pct').textContent=pct+'%';
+  ['freddy','bonnie','chica','foxy'].forEach(a=>{
+    document.getElementById(a+'-ai').textContent=G.aiLevels[a];
+  });
+}
+
+function drainEnergy(){
+  let drain=0.028;
+  if(G.camOpen)drain+=0.025;
+  if(G.doorL)drain+=0.018;
+  if(G.doorR)drain+=0.018;
+  if(G.lightL)drain+=0.010;
+  if(G.lightR)drain+=0.010;
+  G.energy-=drain;
+  if(G.energy<=0){G.energy=0;powerOut();}
+}
+
+function powerOut(){
+  stopGame();
+  showLog('⚡ ENERGÍA AGOTADA',500);
+  setTimeout(()=>{
+    G.doorL=false;G.doorR=false;
+    document.getElementById('door-l').classList.remove('closed');
+    document.getElementById('door-r').classList.remove('closed');
+    document.getElementById('door-vis-l').classList.remove('closed');
+    document.getElementById('door-vis-r').classList.remove('closed');
+    setTimeout(()=>{
+      if(Math.random()<0.8)triggerJumpscare('freddy');
+      else winNight();
+    },3000);
+  },500);
+}
+
+function aiTick(){
+  ['freddy','bonnie','chica','foxy'].forEach(name=>{
+    let lvl=G.aiLevels[name];
+    if(lvl===0)return;
+    let chance=lvl/20;
+    if(Math.random()<chance){
+      moveAnimatronic(name);
+    }
+  });
+  foxyTick();
+  checkOfficeThreats();
+}
+
+function moveAnimatronic(name){
+  let path=AI_MOVES[name];
+  let cur=G.pos[name];
+  if(cur<path.length-1){
+    G.pos[name]=cur+1;
+    if(path[cur+1]==='office'){
+      attemptAttack(name);
+    }
+  }
+}
+
+function attemptAttack(name){
+  let doorBlocked=(name==='bonnie'&&G.doorL)||(name==='foxy'&&G.doorL)||(name==='chica'&&G.doorR)||(name==='freddy'&&G.doorR);
+  if(!doorBlocked){
+    triggerJumpscare(name);
+  } else {
+    showLog('🚪 '+NAMES[name]+' fue bloqueado por la puerta!',2000);
+    G.pos[name]=Math.max(0,G.pos[name]-1);
+    G.energy-=2;
+  }
+}
+
+function foxyTick(){
+  if(G.aiLevels.foxy===0)return;
+  G.foxyTimer++;
+  let interval=Math.max(8,25-G.aiLevels.foxy*2);
+  if(G.foxyTimer>=interval){
+    G.foxyTimer=0;
+    if(G.activeCam!=='2B'&&!G.camOpen){
+      G.foxyRuns++;
+      showLog('🦊 FOXY CORRIENDO POR EL PASILLO!',1500);
+      setTimeout(()=>attemptAttack('foxy'),1200);
+    }
+  }
+}
+
+function checkOfficeThreats(){
+  let threatL=G.pos.bonnie>=4||G.pos.foxy>=4;
+  let threatR=G.pos.chica>=4;
+  let threatF=G.pos.freddy>=4;
+  document.getElementById('td-bonnie').className='threat-dot'+(G.pos.bonnie>=3?' warn':'')+(G.pos.bonnie>=4?' active':'');
+  document.getElementById('td-chica').className='threat-dot'+(G.pos.chica>=3?' warn':'')+(G.pos.chica>=4?' active':'');
+  document.getElementById('td-foxy').className='threat-dot'+(G.pos.foxy>=3?' warn':'')+(G.pos.foxy>=4?' active':'');
+  document.getElementById('td-freddy').className='threat-dot'+(G.pos.freddy>=3?' warn':'')+(G.pos.freddy>=4?' active':'');
+  if(G.lightL){
+    document.getElementById('light-eff-l').style.opacity=threatL?'1':'0.4';
+  }
+  if(G.lightR){
+    document.getElementById('light-eff-r').style.opacity=threatR?'1':'0.4';
+  }
+}
+
+function triggerJumpscare(name){
+  if(G.jumpscareActive)return;
+  G.jumpscareActive=true;
+  stopGame();
+  let js=document.getElementById('jumpscare');
+  document.getElementById('js-emoji').textContent=name==='golden'?EMOJIS.golden:EMOJIS[name];
+  document.getElementById('js-text').textContent=NAMES[name]||'???';
+  js.classList.add('show');
+  setTimeout(()=>{
+    js.classList.remove('show');
+    G.jumpscareActive=false;
+    showLoseScreen(name);
+  },1800);
+}
+
+function showLoseScreen(killer){
+  document.getElementById('lose-screen').style.display='flex';
+  document.getElementById('office').style.display='none';
+  document.getElementById('lose-msg').textContent=
+    (NAMES[killer]||'???')+' te encontró. Eran las '+formatHour(G.hour)+' de la noche '+G.night+'. Inténtalo de nuevo...';
+}
+
+function winNight(){
+  stopGame();
+  G.nightsCleared.push(G.night);
+  document.getElementById('win-screen').style.display='flex';
+  document.getElementById('office').style.display='none';
+  document.getElementById('win-msg').textContent=
+    '¡Sobreviviste la Noche '+G.night+'! Energía restante: '+Math.round(G.energy)+'%';
+  buildProgressPips();
+  document.getElementById('next-btn').style.display=G.night<6?'':'none';
+}
+
+function buildProgressPips(){
+  let c=document.getElementById('progress-nights');
+  c.innerHTML='';
+  for(let i=1;i<=6;i++){
+    let d=document.createElement('div');
+    d.className='prog-pip'+(G.nightsCleared.includes(i)?' done':i===G.night+1?' current':'');
+    c.appendChild(d);
+  }
+}
+
+function stopGame(){
+  if(G.interval){clearInterval(G.interval);G.interval=null;}
+  G.running=false;
+}
+
+function startNight(n){
+  G.night=n;
+  G.energy=100;G.hour=0;G.tick=0;G.secondTick=0;
+  G.camOpen=false;G.activeCam='1A';
+  G.doorL=false;G.doorR=false;G.lightL=false;G.lightR=false;
+  G.pos={freddy:0,bonnie:0,chica:0,foxy:0};
+  G.foxyRuns=0;G.foxyTimer=0;
+  G.goldenShown=false;G.camViewCount=0;
+  G.phoneShown=false;G.phoneIdx=0;G.phoneTimer=0;
+  G.jumpscareActive=false;
+  let nai=NIGHT_AI[Math.min(n,6)];
+  G.aiLevels={...nai};
+  document.getElementById('start-screen').style.display='none';
+  document.getElementById('win-screen').style.display='none';
+  document.getElementById('lose-screen').style.display='none';
+  document.getElementById('office').style.display='';
+  document.getElementById('cam-panel').classList.remove('open');
+  document.getElementById('door-l').classList.remove('closed');
+  document.getElementById('door-r').classList.remove('closed');
+  document.getElementById('door-vis-l').classList.remove('closed');
+  document.getElementById('door-vis-r').classList.remove('closed');
+  document.getElementById('light-eff-l').style.opacity='0';
+  document.getElementById('light-eff-r').style.opacity='0';
+  document.getElementById('light-l').classList.remove('on');
+  document.getElementById('light-r').classList.remove('on');
+  buildCamTabs();
+  updateHUD();
+  updateCamView();
+  if(n===1){
+    G.phoneShown=true;
+    showPhoneCall();
+  }
+  if(!G.running){
+    G.running=true;
+    G.interval=setInterval(gameTick,500);
+  }
+}
+
+function gameTick(){
+  if(!G.running)return;
+  G.tick++;
+  G.secondTick++;
+  drainEnergy();
+  if(G.tick%2===0)aiTick();
+  if(G.secondTick>=16){
+    G.secondTick=0;
+    G.hour++;
+    if(G.hour>=6){winNight();return;}
+    checkEasterEggs();
+  }
+  if(G.phoneTimer>0){G.phoneTimer--;if(G.phoneTimer===0)hidePhoneCall();}
+  updateHUD();
+}
+
+function checkEasterEggs(){
+  if(G.hour===2&&Math.random()<0.07&&!G.goldenShown){
+    G.goldenShown=true;
+    showGoldenFreddy();
+  }
+  if(G.night===6&&G.hour===5&&Math.random()<0.1){
+    showLog('👁️ IT\'S ME — Golden Freddy appears...',2000);
+  }
+}
+
+function showGoldenFreddy(){
+  let gf=document.getElementById('golden-freddy');
+  gf.classList.add('show');
+  showLog('👻 EASTER EGG: Golden Freddy hallucination!',2500);
+  setTimeout(()=>{
+    gf.classList.remove('show');
+  },3000);
+}
+
+function toggleCams(){
+  G.camOpen=!G.camOpen;
+  document.getElementById('cam-panel').classList.toggle('open',G.camOpen);
+  document.getElementById('cam-open-btn').textContent=G.camOpen?'▼ CÁMARAS [TABLET]':'▲ CÁMARAS [TABLET]';
+  if(G.camOpen){G.camViewCount++;updateCamView();}
+  if(G.camViewCount===7&&!G.easterEggs.rarePoster){
+    G.easterEggs.rarePoster=true;
+    showLog('🖼️ EASTER EGG: Encontraste el poster raro de la Cam 7!',3000);
+  }
+}
+
+function buildCamTabs(){
+  let ct=document.getElementById('cam-tabs');
+  ct.innerHTML='';
+  CAMERAS.forEach(c=>{
+    let btn=document.createElement('div');
+    btn.className='cam-tab'+(c.id===G.activeCam?' active':'');
+    btn.textContent='CAM '+c.id;
+    btn.onclick=()=>selectCam(c.id);
+    ct.appendChild(btn);
+  });
+}
+
+function selectCam(id){
+  G.activeCam=id;
+  G.energy-=0.3;
+  document.querySelectorAll('.cam-tab').forEach(t=>{
+    t.className='cam-tab'+(t.textContent==='CAM '+id?' active':'');
+  });
+  updateCamView();
+}
+
+function updateCamView(){
+  let cam=CAMERAS.find(c=>c.id===G.activeCam);
+  if(!cam)return;
+  let mon=document.getElementById('cam-monitor');
+  let animHere=getAnimatronsInCam(G.activeCam);
+  let content=`<div style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;background:#050a05">`;
+  content+=`<div style="position:absolute;top:4px;left:6px;font-size:9px;color:#4cff4c;font-family:'Share Tech Mono',monospace">CAM ${cam.id} — ${cam.name}</div>`;
+  if(cam.id==='2A'){
+    content+=`<div style="font-size:28px">📺</div><div style="font-size:9px;color:#2a5a2a">SIN SEÑAL DE VIDEO</div><div style="font-size:9px;color:#2a4a2a">Solo audio disponible</div>`;
+  } else {
+    content+=`<div style="font-size:36px">${cam.emoji}</div>`;
+    if(animHere.length){
+      content+=`<div class="animatronic alert">${animHere.map(a=>EMOJIS[a]).join('')}</div>`;
+      content+=`<div style="font-size:9px;color:#ff4444">${animHere.map(a=>NAMES[a]).join(', ')} detectado</div>`;
+    } else {
+      content+=`<div style="font-size:9px;color:#2a5a2a">${cam.desc}</div>`;
+    }
+    if(cam.id==='7'&&G.easterEggs.rarePoster){
+      content+=`<div style="font-size:9px;color:#ff8800;margin-top:4px">📸 POSTER INUSUAL DETECTADO</div>`;
+    }
+  }
+  content+=`<div style="position:absolute;top:0;left:0;width:100%;height:100%;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,255,0,0.02) 3px,rgba(0,255,0,0.02) 4px);pointer-events:none"></div>`;
+  content+='</div>';
+  mon.innerHTML=content;
+}
+
+function getAnimatronsInCam(camId){
+  let found=[];
+  ['freddy','bonnie','chica','foxy'].forEach(a=>{
+    let path=AI_MOVES[a];
+    let pos=G.pos[a];
+    if(pos<path.length&&path[pos]===camId)found.push(a);
+  });
+  return found;
+}
+
+function toggleDoor(side){
+  if(side==='l'){
+    G.doorL=!G.doorL;
+    document.getElementById('door-l').classList.toggle('closed',G.doorL);
+    document.getElementById('door-vis-l').classList.toggle('closed',G.doorL);
+    document.getElementById('door-l').textContent=G.doorL?'CERRADA':'PUERTA';
+    showLog(G.doorL?'🚪 Puerta izquierda CERRADA':'🚪 Puerta izquierda ABIERTA',1200);
+  } else {
+    G.doorR=!G.doorR;
+    document.getElementById('door-r').classList.toggle('closed',G.doorR);
+    document.getElementById('door-vis-r').classList.toggle('closed',G.doorR);
+    document.getElementById('door-r').textContent=G.doorR?'CERRADA':'PUERTA';
+    showLog(G.doorR?'🚪 Puerta derecha CERRADA':'🚪 Puerta derecha ABIERTA',1200);
+  }
+}
+
+function lightOn(side){
+  if(side==='l'){G.lightL=true;document.getElementById('light-l').classList.add('on');document.getElementById('light-eff-l').style.opacity='1';}
+  else{G.lightR=true;document.getElementById('light-r').classList.add('on');document.getElementById('light-eff-r').style.opacity='1';}
+  checkOfficeThreats();
+}
+function lightOff(side){
+  if(side==='l'){G.lightL=false;document.getElementById('light-l').classList.remove('on');document.getElementById('light-eff-l').style.opacity='0';}
+  else{G.lightR=false;document.getElementById('light-r').classList.remove('on');document.getElementById('light-eff-r').style.opacity='0';}
+}
+
+function showPhoneCall(){
+  let el=document.getElementById('phone-call');
+  let msgs=PHONE_MSGS;
+  el.classList.add('show');
+  let idx=Math.min(G.night-1,msgs.length-1);
+  document.getElementById('phone-text').textContent=msgs[idx];
+  G.phoneTimer=20;
+}
+function hidePhoneCall(){
+  document.getElementById('phone-call').classList.remove('show');
+}
+
+document.getElementById('start-btn').onclick=()=>{
+  let sel=document.querySelector('.night-btn.sel');
+  let n=sel?parseInt(sel.dataset.n):1;
+  startNight(n);
+};
+document.querySelectorAll('.night-btn').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.night-btn').forEach(b=>b.classList.remove('sel'));
+    btn.classList.add('sel');
+  };
+});
+document.getElementById('next-btn').onclick=()=>{
+  if(G.night<6)startNight(G.night+1);
+};
+document.getElementById('retry-btn').onclick=()=>startNight(G.night);
+document.getElementById('menu-btn').onclick=()=>{
+  document.getElementById('lose-screen').style.display='none';
+  document.getElementById('start-screen').style.display='flex';
+};
+document.getElementById('restart-btn2').onclick=()=>{
+  document.getElementById('win-screen').style.display='none';
+  document.getElementById('start-screen').style.display='flex';
+};
+
+document.addEventListener('keydown',e=>{
+  if(!G.running)return;
+  if(e.key==='ArrowLeft'||e.key==='a')toggleDoor('l');
+  if(e.key==='ArrowRight'||e.key==='d')toggleDoor('r');
+  if(e.key==='c'||e.key==='C')toggleCams();
+  if(e.key==='q'||e.key==='Q')lightOn('l');
+  if(e.key==='e'||e.key==='E')lightOn('r');
+});
+document.addEventListener('keyup',e=>{
+  if(!G.running)return;
+  if(e.key==='q'||e.key==='Q')lightOff('l');
+  if(e.key==='e'||e.key==='E')lightOff('r');
+});
+</script>
